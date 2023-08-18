@@ -125,3 +125,5 @@ def delete_todo_item_by_id(todo_item_id: int, db: Session = Depends(get_db)):
     if db_todo_item is None:
         raise HTTPException(status_code=404, detail="Todo item not found")
     return crud.delete_todo_item_by_id(db=db, todo_item_id=todo_item_id)
+
+# Adding some cool changes!
