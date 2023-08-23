@@ -1,4 +1,6 @@
+import sqlalchemy
 from sqlalchemy.orm import Session
+
 from . import models, schemas
 
 
@@ -79,3 +81,24 @@ def delete_todo_item_by_id(db: Session, todo_item_id: int):
     db.delete(db_todo_item)
     db.commit()
     return db_todo_item
+
+
+def delete_todo_by_id(db: Session, todo_id: int):
+    db_todo_item = (
+        db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    )
+    db.delete(db_todo_item)
+    db.commit()
+    return db_todo_item
+
+
+def get_todo_ordered(db: Session, ordered_by: str):
+    column_order = {
+        "date": models.Todo.due_date,
+        "title": models.Todo.title
+    }
+
+    if ordered_by in column_order:
+        return db.query(models.Todo).order_by(sqlalchemy.desc(column_order[ordered_by])).all()
+
+    return []

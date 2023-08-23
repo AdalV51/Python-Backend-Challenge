@@ -37,8 +37,8 @@ def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 
 # Get all todos
 @app.get("/todos/", response_model=List[schemas.Todo])
-def read_todos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    todos = crud.get_todos(db, skip=skip, limit=limit)
+def read_todos(page: int = 0, page_size: int = 100, db: Session = Depends(get_db)):
+    todos = crud.get_todos(db, skip=page, limit=page_size)
     return todos
 
 
@@ -66,8 +66,10 @@ def update_todo_by_id(
 @app.delete("/todos/{todo_id}", response_model=schemas.Todo)
 def delete_todo_by_id(todo_id: int, db: Session = Depends(get_db)):
     db_todo = crud.get_todo_by_id(db, todo_id=todo_id)
+
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
+
     return crud.delete_todo_by_id(db=db, todo_id=todo_id)
 
 
@@ -125,3 +127,16 @@ def delete_todo_item_by_id(todo_item_id: int, db: Session = Depends(get_db)):
     if db_todo_item is None:
         raise HTTPException(status_code=404, detail="Todo item not found")
     return crud.delete_todo_item_by_id(db=db, todo_item_id=todo_item_id)
+
+
+# Get a todo item ordered
+@app.get("/todos/ordered/")
+def get_todo_ordered_date(db: Session = Depends(get_db)):
+    return crud.get_todo_ordered(db=db, ordered_by="date")
+
+
+# Get a todo item ordered by a column (Date or title)
+@app.get("/todos/ordered/{ordered_by}")
+def get_todo_ordered_date_by(ordered_by: str, db: Session = Depends(get_db)):
+    return crud.get_todo_ordered(db=db, ordered_by=ordered_by)
+
