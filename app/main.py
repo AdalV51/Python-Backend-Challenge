@@ -1,8 +1,10 @@
 from typing import List
+
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
-from . import crud, models, schemas
-from .database import SessionLocal, engine
+
+from app import crud, models, schemas
+from app.database import SessionLocal, engine
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
@@ -37,8 +39,8 @@ def create_todo(todo: schemas.TodoCreate, db: Session = Depends(get_db)):
 
 # Get all todos
 @app.get("/todos/", response_model=List[schemas.Todo])
-def read_todos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    todos = crud.get_todos(db, skip=skip, limit=limit)
+def read_todos(page: int = 0, page_size: int = 100, db: Session = Depends(get_db)):
+    todos = crud.get_todos(db, skip=page, limit=page_size)
     return todos
 
 
@@ -54,7 +56,7 @@ def read_todo_by_id(todo_id: int, db: Session = Depends(get_db)):
 # Update a todo by id
 @app.put("/todos/{todo_id}", response_model=schemas.Todo)
 def update_todo_by_id(
-    todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)
+        todo_id: int, todo: schemas.TodoUpdate, db: Session = Depends(get_db)
 ):
     db_todo = crud.get_todo_by_id(db, todo_id=todo_id)
     if db_todo is None:
@@ -66,16 +68,16 @@ def update_todo_by_id(
 @app.delete("/todos/{todo_id}", response_model=schemas.Todo)
 def delete_todo_by_id(todo_id: int, db: Session = Depends(get_db)):
     db_todo = crud.get_todo_by_id(db, todo_id=todo_id)
+
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
+
     return crud.delete_todo_by_id(db=db, todo_id=todo_id)
 
 
 # Create a todo item
 @app.post("/todos/{todo_id}/items/", response_model=schemas.TodoItem)
-def create_todo_item(
-    todo_id: int, todo_item: schemas.TodoItemCreate, db: Session = Depends(get_db)
-):
+def create_todo_item(todo_id: int, todo_item: schemas.TodoItemCreate, db: Session = Depends(get_db)):
     db_todo_item = crud.get_todo_item_by_title(db, title=todo_item.title)
     if db_todo_item:
         raise HTTPException(status_code=400, detail="Todo item already registered")
@@ -107,12 +109,12 @@ def read_todo_item_by_id(todo_item_id: int, db: Session = Depends(get_db)):
 
 # Update a todo item by id
 @app.put("/todos/items/{todo_item_id}", response_model=schemas.TodoItem)
-def update_todo_item_by_id(
-    todo_item_id: int, todo_item: schemas.TodoItemUpdate, db: Session = Depends(get_db)
-):
+def update_todo_item_by_id(todo_item_id: int, todo_item: schemas.TodoItemUpdate, db: Session = Depends(get_db)):
     db_todo_item = crud.get_todo_item_by_id(db, todo_item_id=todo_item_id)
+
     if db_todo_item is None:
         raise HTTPException(status_code=404, detail="Todo item not found")
+
     return crud.update_todo_item_by_id(
         db=db, todo_item_id=todo_item_id, todo_item=todo_item
     )
@@ -125,3 +127,15 @@ def delete_todo_item_by_id(todo_item_id: int, db: Session = Depends(get_db)):
     if db_todo_item is None:
         raise HTTPException(status_code=404, detail="Todo item not found")
     return crud.delete_todo_item_by_id(db=db, todo_item_id=todo_item_id)
+
+
+# Get a todo item ordered
+@app.get("/todos/ordered/")
+def get_todo_ordered_date(db: Session = Depends(get_db)):
+    return crud.get_todo_ordered(db=db, ordered_by="date")
+
+
+# Get a todo item ordered by a column (Date or title)
+@app.get("/todos/ordered/{ordered_by}")
+def get_todo_ordered_date_by(ordered_by: str, db: Session = Depends(get_db)):
+    return crud.get_todo_ordered(db=db, ordered_by=ordered_by)

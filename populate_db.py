@@ -1,17 +1,21 @@
+import random
+import datetime
+
 from sqlalchemy.orm import Session
+
 from app import models
 from app.models import Todo, TodoItem
 from app.database import SessionLocal, engine
-import random
-from datetime import datetime, timedelta
 
 
 def create_todos(db: Session, count: int, due_date: bool = False):
     for i in range(count):
         todo = Todo(title=f"Todo {i}", description=f"Description for Todo {i}")
+
         if due_date:
             random_days = random.randint(1, 100)
-            todo.due_date = datetime.now() + timedelta(days=random_days)
+            todo.due_date = datetime.datetime.now() + datetime.timedelta(days=random_days)
+
         db.add(todo)
         db.commit()
         db.refresh(todo)
@@ -22,6 +26,7 @@ def create_todos(db: Session, count: int, due_date: bool = False):
                 description=f"Description for Item {j} of Todo {i}",
                 todo_id=todo.id,
             )
+
             db.add(item)
             db.commit()
 
